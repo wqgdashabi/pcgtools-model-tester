@@ -1,0 +1,27 @@
+{
+  "name": "material-tester",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "naive-ui": "^2.26.0",
+    "stats.js": "^0.17.0",
+    "terser": "^5.29.2",
+    "three": "0.154.0",
+    "vue": "^3.2.25"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.13",
+    "@types/stats.js": "^0.17.0",
+    "@types/three": "^0.154.0",
+    "@vitejs/plugin-vue": "^5.0.3",
+    "sass": "^1.49.9",
+    "typescript": "5.6.2",
+    "vite": "^5.0.12",
+    "vue-tsc": "2.0.29"
+  }
+}
