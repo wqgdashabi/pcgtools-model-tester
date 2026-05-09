@@ -480,7 +480,7 @@ function setupLightGui(container) {
     renderer.toneMappingExposure = value
   })
 
-  const ambientFolder = sceneGui.addFolder('Ambient Light（固定一盏）')
+  const ambientFolder = sceneGui.addFolder('Ambient Light(环境光全局固定一个)')
   ambientFolder.add(lightMap, 'ambientVisible').name('visible').onChange((v) => {
     ambientLight.visible = v
   })
@@ -494,13 +494,13 @@ function setupLightGui(container) {
     ambientLight.color.set(v)
   })
 
-  guiFolderHemi = sceneGui.addFolder('Hemisphere Lights')
+  guiFolderHemi = sceneGui.addFolder('Hemisphere Lights (半球光)')
   guiFolderHemi.add({ add: pushHemisphereLight }, 'add').name('+ 添加半球光')
 
-  guiFolderPoint = sceneGui.addFolder('Point Lights')
+  guiFolderPoint = sceneGui.addFolder('Point Lights (点光)')
   guiFolderPoint.add({ add: pushPointLight }, 'add').name('+ 添加点光源')
 
-  guiFolderDir = sceneGui.addFolder('Directional Lights')
+  guiFolderDir = sceneGui.addFolder('Directional Lights (平行光)')
   guiFolderDir.add({ add: pushDirectionalLight }, 'add').name('+ 添加平行光')
 
   ambientFolder.open()
@@ -523,18 +523,18 @@ export function main(DOM, { guiContainer, onError, onModelLoaded, onTextureAppli
   renderer.shadowMap.enabled = true
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.38
+  renderer.toneMappingExposure = 1.0
   DOM.appendChild(renderer.domElement)
 
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xa0a0a0)
+  scene.background = new THREE.Color(0xf0f0f0)
   scene.fog = new THREE.Fog(0xa0a0a0, 160, 1000)
 
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000)
   camera.position.set(0, 2, 5)
   scene.add(camera)
 
-  ambientLight = new THREE.AmbientLight(0xa3a3a3, 1)
+  ambientLight = new THREE.AmbientLight(0xf0f0f0, 0.5)
   ambientLight.visible = true
   scene.add(ambientLight)
 
@@ -546,7 +546,7 @@ export function main(DOM, { guiContainer, onError, onModelLoaded, onTextureAppli
 
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(2000, 2000),
-    new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: 0xfafafa, depthWrite: false })
   )
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true

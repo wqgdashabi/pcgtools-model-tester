@@ -476,7 +476,6 @@ async function onTexFileChange(e: Event, slot: string) {
   position: absolute;
   top: 0;
   left: 0;
-  pointer-events: none;
 }
 
 .panel-tab {
