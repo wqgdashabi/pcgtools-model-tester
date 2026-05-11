@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import Stats from 'stats.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js'
 import { path as envHdrPath, envMap as envHdrMap } from './envMap.js'
@@ -36,6 +37,7 @@ const stats = new Stats()
 const textureLoader = new THREE.TextureLoader()
 const fbxLoader = new FBXLoader()
 const gltfLoader = new GLTFLoader()
+gltfLoader.setDRACOLoader(new DRACOLoader().setDecoderPath('./Common/draco/'))
 const rgbeLoader = new RGBELoader()
 let currentSceneEnvTexture = null
 
