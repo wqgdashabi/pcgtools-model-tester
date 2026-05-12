@@ -3,23 +3,13 @@
     <div class="canvas-mount" ref="mountRef"></div>
     <div class="stat-container"></div>
 
-    <button
-      class="panel-tab left-tab"
-      :style="{ left: leftOpen ? LEFT_W + 32 + 'px' : '8px' }"
-      type="button"
-      @click="leftOpen = !leftOpen"
-      :title="leftOpen ? '关闭层级面板' : '打开层级面板'"
-    >
+    <button class="panel-tab left-tab" :style="{ left: leftOpen ? LEFT_W + 32 + 'px' : '8px' }" type="button"
+      @click="leftOpen = !leftOpen" :title="leftOpen ? '关闭层级面板' : '打开层级面板'">
       {{ leftOpen ? '◀' : '▶' }}
     </button>
 
-    <button
-      class="panel-tab right-tab"
-      :style="{ right: rightOpen ? RIGHT_W + 32 + 'px' : '8px' }"
-      type="button"
-      @click="rightOpen = !rightOpen"
-      :title="rightOpen ? '关闭文件面板' : '打开文件面板'"
-    >
+    <button class="panel-tab right-tab" :style="{ right: rightOpen ? RIGHT_W + 32 + 'px' : '8px' }" type="button"
+      @click="rightOpen = !rightOpen" :title="rightOpen ? '关闭文件面板' : '打开文件面板'">
       {{ rightOpen ? '▶' : '◀' }}
     </button>
 
@@ -37,29 +27,15 @@
             <button type="button" class="mini-btn" @click="collapseAllNodes">折叠</button>
           </div>
         </div>
-        <p class="hierarchy-hint">
-          GLB 与独立 .gltf 只是封装格式，场景结构一致。若只有 Scene→单个 Mesh，多半是 DCC
-          导出时合并了几何体；角色骨架 FBX 仍会有多层 Bone。多材质网格会在下列出「材质槽」子节点。
-          在画布上<strong>单击</strong>模型可选中并显示黄色包围盒线框（拖拽旋转视角；点击空白取消选中）。
-        </p>
         <div v-if="!modelFile" class="hint center-hint">暂无模型，上传后将展示完整父子层级</div>
         <template v-else>
           <div class="tree-meta">共 {{ flatNodes.length }} 个节点</div>
           <div class="tree-scroll">
-            <div
-              v-for="node in flatNodes"
-              :key="node.uuid"
-              class="tree-node"
+            <div v-for="node in flatNodes" :key="node.uuid" class="tree-node"
               :class="{ highlighted: node.uuid === selectedTreeUuid }"
-              :style="{ paddingLeft: node.depth * 14 + 8 + 'px' }"
-              @click="onPickNode(node)"
-            >
-              <span
-                v-if="node.hasChildren"
-                class="tree-arrow"
-                @click.stop="toggleCollapse(node.uuid)"
-                >{{ collapsedSet.has(node.uuid) ? '▶' : '▼' }}</span
-              >
+              :style="{ paddingLeft: node.depth * 14 + 8 + 'px' }" @click="onPickNode(node)">
+              <span v-if="node.hasChildren" class="tree-arrow" @click.stop="toggleCollapse(node.uuid)">{{
+                collapsedSet.has(node.uuid) ? '▶' : '▼' }}</span>
               <span v-else class="tree-arrow-placeholder"></span>
               <span class="node-badge" :class="`badge-${getTypeBadge(node.type)}`">
                 {{ getTypeBadge(node.type) }}
@@ -79,21 +55,11 @@
         <n-button size="tiny" type="info" @click="triggerModelUpload" :loading="modelLoading">
           上传模型 FBX / GLB
         </n-button>
-        <input
-          ref="modelInputRef"
-          type="file"
-          accept=".fbx,.glb,.gltf"
-          class="hidden-input"
-          @change="onModelFileChange"
-        />
-        <div
-          class="drop-zone"
-          :class="{ active: modelDragOver, disabled: modelLoading }"
-          @dragenter.prevent="onModelDragEnter"
-          @dragover.prevent="onModelDragEnter"
-          @dragleave.prevent="onModelDragLeave"
-          @drop.prevent="onDropModel"
-        >
+        <input ref="modelInputRef" type="file" accept=".fbx,.glb,.gltf" class="hidden-input"
+          @change="onModelFileChange" />
+        <div class="drop-zone" :class="{ active: modelDragOver, disabled: modelLoading }"
+          @dragenter.prevent="onModelDragEnter" @dragover.prevent="onModelDragEnter"
+          @dragleave.prevent="onModelDragLeave" @drop.prevent="onDropModel">
           拖拽 .fbx / .glb / .gltf 到这里上传
         </div>
         <div v-if="modelFile" class="file-item model-item">
@@ -106,58 +72,28 @@
         <p class="texture-hint">作用于左侧当前选中的网格或材质槽：调节基础色、自发光、粗糙度与金属度等。</p>
         <div class="pbr-row pbr-color-row">
           <span class="texture-label">color</span>
-          <n-color-picker
-            :value="pbrColor"
-            :show-alpha="false"
-            :modes="['hex']"
-            size="small"
-            :disabled="!modelFile || !pbrValid"
-            @update:value="onPbrColor"
-          />
+          <n-color-picker :value="pbrColor" :show-alpha="false" :modes="['hex']" size="small"
+            :disabled="!modelFile || !pbrValid" @update:value="onPbrColor" />
         </div>
         <div class="pbr-row pbr-color-row">
           <span class="texture-label">emissive</span>
-          <n-color-picker
-            :value="pbrEmissive"
-            :show-alpha="false"
-            :modes="['hex']"
-            size="small"
-            :disabled="!modelFile || !pbrValid"
-            @update:value="onPbrEmissive"
-          />
+          <n-color-picker :value="pbrEmissive" :show-alpha="false" :modes="['hex']" size="small"
+            :disabled="!modelFile || !pbrValid" @update:value="onPbrEmissive" />
         </div>
         <div class="pbr-row">
-          <span class="texture-label">emissiveIntensity</span>
-          <n-slider
-            :value="pbrEmissiveIntensity"
-            :min="0"
-            :max="4"
-            :step="0.01"
-            :disabled="!modelFile || !pbrValid"
-            @update:value="onPbrEmissiveIntensity"
-          />
+          <span class="texture-label">emissiveIntensity : {{ pbrEmissiveIntensity }}</span>
+          <n-slider :value="pbrEmissiveIntensity" :min="0" :max="1" :step="0.01" :disabled="!modelFile || !pbrValid"
+            @update:value="onPbrEmissiveIntensity" />
         </div>
         <div class="pbr-row">
-          <span class="texture-label">roughness</span>
-          <n-slider
-            :value="pbrRoughness"
-            :min="0"
-            :max="1"
-            :step="0.01"
-            :disabled="!modelFile || !pbrValid"
-            @update:value="onPbrRoughness"
-          />
+          <span class="texture-label">roughness : {{ pbrRoughness }}</span>
+          <n-slider :value="pbrRoughness" :min="0" :max="1" :step="0.01" :disabled="!modelFile || !pbrValid"
+            @update:value="onPbrRoughness" />
         </div>
         <div class="pbr-row">
-          <span class="texture-label">metalness</span>
-          <n-slider
-            :value="pbrMetalness"
-            :min="0"
-            :max="1"
-            :step="0.01"
-            :disabled="!modelFile || !pbrValid"
-            @update:value="onPbrMetalness"
-          />
+          <span class="texture-label">metalness : {{ pbrMetalness }}</span>
+          <n-slider :value="pbrMetalness" :min="0" :max="1" :step="0.01" :disabled="!modelFile || !pbrValid"
+            @update:value="onPbrMetalness" />
         </div>
       </div>
 
@@ -174,21 +110,12 @@
               上传
             </n-button>
           </div>
-          <input
-            :ref="(el) => setTexInputRef(row.slot, el)"
-            type="file"
-            accept="image/*"
-            class="hidden-input"
-            @change="(e) => onTexFileChange(e, row.slot)"
-          />
-          <div
-            class="drop-zone drop-zone-compact"
+          <input :ref="(el) => setTexInputRef(row.slot, el)" type="file" accept="image/*" class="hidden-input"
+            @change="(e) => onTexFileChange(e, row.slot)" />
+          <div class="drop-zone drop-zone-compact"
             :class="{ active: texDragSlot === row.slot, disabled: !modelFile || texLoading }"
-            @dragenter.prevent="onTexDragEnter(row.slot)"
-            @dragover.prevent="onTexDragEnter(row.slot)"
-            @dragleave.prevent="onTexDragLeave(row.slot, $event)"
-            @drop.prevent="(e) => onDropTex(e, row.slot)"
-          >
+            @dragenter.prevent="onTexDragEnter(row.slot)" @dragover.prevent="onTexDragEnter(row.slot)"
+            @dragleave.prevent="onTexDragLeave(row.slot, $event)" @drop.prevent="(e) => onDropTex(e, row.slot)">
             拖入图片
           </div>
           <p v-if="texNames[row.slot]" class="tex-file-name">
@@ -550,12 +477,6 @@ async function onTexFileChange(e: Event, slot: string) {
   height: 100%;
 }
 
-.stat-container {
-  position: absolute;
-  top: 0;
-  left: 400px;
-}
-
 .panel-tab {
   position: absolute;
   top: 20px;
@@ -672,14 +593,6 @@ async function onTexFileChange(e: Event, slot: string) {
   background: rgb(255 255 255 / 0.1);
 }
 
-.hierarchy-hint {
-  margin: 0 12px 8px;
-  font-size: 10px;
-  line-height: 1.45;
-  color: #666;
-  flex-shrink: 0;
-}
-
 .tree-meta {
   padding: 0 12px 6px;
   font-size: 10px;
@@ -738,7 +651,7 @@ async function onTexFileChange(e: Event, slot: string) {
   min-height: 0;
   padding: 4px 0;
   scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.1) transparent;
+  scrollbar-color: rgb(255 255 255 / 0.5) transparent;
 }
 
 .tree-node {
@@ -873,6 +786,8 @@ async function onTexFileChange(e: Event, slot: string) {
   gap: 6px;
   padding: 10px 12px;
   border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.5) transparent;
 }
 
 .texture-section {
@@ -910,7 +825,7 @@ async function onTexFileChange(e: Event, slot: string) {
 
 .texture-label {
   font-size: 11px;
-  color: #aaa;
+  color: #fff;
 }
 
 .hidden-input {
@@ -994,5 +909,19 @@ async function onTexFileChange(e: Event, slot: string) {
   font-size: 11px;
   color: #555;
   font-style: italic;
+}
+</style>
+
+<style lang="scss">
+.stat-container {
+
+  position: absolute;
+  width: 80px;
+  top: 0;
+  left: calc(100% - 80px);
+
+  &>div {
+    position: absolute !important;
+  }
 }
 </style>

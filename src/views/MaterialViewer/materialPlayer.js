@@ -4,7 +4,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import Stats from 'stats.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js'
+import { path as envHdrPath, envMap as envHdrMap } from './envMap.js'
 
 let camera, scene, renderer, orbitControls
 let pmremGenerator = null
@@ -34,6 +37,43 @@ const stats = new Stats()
 const textureLoader = new THREE.TextureLoader()
 const fbxLoader = new FBXLoader()
 const gltfLoader = new GLTFLoader()
+gltfLoader.setDRACOLoader(new DRACOLoader().setDecoderPath('./Common/draco/'))
+const rgbeLoader = new RGBELoader()
+let currentSceneEnvTexture = null
+
+function applySceneEnvironmentHdr(key) {
+  if (!scene) return
+  if (currentSceneEnvTexture) {
+    if (scene.environment === currentSceneEnvTexture) scene.environment = null
+    currentSceneEnvTexture.dispose?.()
+    currentSceneEnvTexture = null
+  }
+  if (!key || key === 'No') {
+    scene.environment = null
+    return
+  }
+  const fileName = envHdrMap[key]
+  if (!fileName) return
+  rgbeLoader.load(
+    envHdrPath + fileName,
+    (envTexture) => {
+
+      envTexture.colorSpace = THREE.SRGBColorSpace
+      envTexture.mapping = THREE.EquirectangularReflectionMapping
+
+      if (!scene) {
+        envTexture.dispose?.()
+        return
+      }
+      currentSceneEnvTexture = envTexture
+      scene.environment = envTexture
+    },
+    undefined,
+    (err) => {
+      _onError && _onError(`HDR 加载失败: ${err?.message ?? err}`)
+    }
+  )
+}
 
 let _onError = null
 let _onModelLoaded = null
@@ -194,7 +234,7 @@ function ensureStandardMaterialAt(mesh, materialIndex) {
 }
 
 /** 选中态仅用包围盒线框提示，避免改写 emissive / emissiveIntensity（右侧面板可实时调节） */
-function setSelectionHighlight(_selUuid) {}
+function setSelectionHighlight(_selUuid) { }
 
 function removeHemisphereEntry(entry) {
   const i = hemiLightEntries.indexOf(entry)
@@ -274,15 +314,15 @@ function pushHemisphereLight() {
     light.groundColor.set(v)
     helper.update()
   })
-  ;['x', 'y', 'z'].forEach((axis) => {
-    folder
-      .add(entry.params, axis, -20, 20, 0.1)
-      .name(axis)
-      .onChange((v) => {
-        light.position[axis] = v
-        helper.update()
-      })
-  })
+    ;['x', 'y', 'z'].forEach((axis) => {
+      folder
+        .add(entry.params, axis, -20, 20, 0.1)
+        .name(axis)
+        .onChange((v) => {
+          light.position[axis] = v
+          helper.update()
+        })
+    })
   folder.add(entry.params, 'remove').name('移除此光')
 
   folder.open()
@@ -341,15 +381,15 @@ function pushPointLight() {
     light.color.set(v)
     helper.update()
   })
-  ;['x', 'y', 'z'].forEach((axis) => {
-    folder
-      .add(entry.params, axis, -30, 30, 0.1)
-      .name(axis)
-      .onChange((v) => {
-        light.position[axis] = v
-        helper.update()
-      })
-  })
+    ;['x', 'y', 'z'].forEach((axis) => {
+      folder
+        .add(entry.params, axis, -30, 30, 0.1)
+        .name(axis)
+        .onChange((v) => {
+          light.position[axis] = v
+          helper.update()
+        })
+    })
   folder.add(entry.params, 'remove').name('移除此光')
 
   folder.open()
@@ -414,15 +454,15 @@ function pushDirectionalLight() {
     light.color.set(v)
     helper.update()
   })
-  ;['x', 'y', 'z'].forEach((axis) => {
-    folder
-      .add(entry.params, axis, -30, 30, 0.1)
-      .name(axis)
-      .onChange((v) => {
-        light.position[axis] = v
-        helper.update()
-      })
-  })
+    ;['x', 'y', 'z'].forEach((axis) => {
+      folder
+        .add(entry.params, axis, -30, 30, 0.1)
+        .name(axis)
+        .onChange((v) => {
+          light.position[axis] = v
+          helper.update()
+        })
+    })
   folder.add(entry.params, 'remove').name('移除此光')
 
   folder.open()
@@ -434,6 +474,8 @@ function setupLightGui(container) {
   const lightMap = {
     toneMapping: renderer.toneMapping,
     toneMappingExposure: renderer.toneMappingExposure,
+
+    environmentHdr: 'No',
 
     ambientVisible: ambientLight.visible,
     ambientIntensity: ambientLight.intensity,
@@ -463,6 +505,13 @@ function setupLightGui(container) {
   sceneGui.add(lightMap, 'toneMappingExposure', 0, 2, 0.01).onChange((value) => {
     renderer.toneMappingExposure = value
   })
+
+  sceneGui
+    .add(lightMap, 'environmentHdr', ['No', ...Object.keys(envHdrMap)])
+    .name('Environment HDR')
+    .onChange((value) => {
+      applySceneEnvironmentHdr(value)
+    })
 
   const ambientFolder = sceneGui.addFolder('Ambient Light(环境光全局固定一个)')
   ambientFolder.add(lightMap, 'ambientVisible').name('visible').onChange((v) => {
@@ -532,15 +581,15 @@ export function main(DOM, { guiContainer, onError, onModelLoaded, onTextureAppli
   setupLightGui(guiContainer)
 
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(2000, 2000),
-    new THREE.MeshBasicMaterial({ color: 0xfafafa, depthWrite: false })
+    new THREE.PlaneGeometry(160, 160),
+    new THREE.MeshBasicMaterial({ color: 0xfcfcfc, depthWrite: false ,fog:scene.fog, })
   )
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true
   scene.add(ground)
 
   const grid = new THREE.GridHelper(160, 60, 0x000000, 0x000000)
-  grid.material.opacity = 0.2
+  grid.material.opacity = 0.08
   grid.material.transparent = true
   scene.add(grid)
 
@@ -879,7 +928,12 @@ export function dispose() {
   directionalLightEntries = []
 
   ambientLight = null
+  if (currentSceneEnvTexture) {
+    currentSceneEnvTexture.dispose?.()
+    currentSceneEnvTexture = null
+  }
   if (scene) {
+    scene.environment = null
     scene.traverse((child) => {
       if (child.material) {
         const mats = Array.isArray(child.material) ? child.material : [child.material]
